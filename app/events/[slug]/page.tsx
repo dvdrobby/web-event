@@ -4,6 +4,7 @@ import BookEvent from "@/components/BookEvent";
 import { getSimilarEventsBySlug } from "@/lib/actions/event.actions";
 import { IEvent } from "@/database";
 import EventCard from "@/components/EventCard";
+import { cacheLife } from "next/cache";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -19,7 +20,7 @@ const EventAgenda = ({ agendaItems }: { agendaItems: string[] }) => (
         <h2>Agenda</h2>
         <ul>
             {agendaItems?.map((item) => (
-                <li key={item}>{item}</li>
+                <li key={item} className="list-none">{item}</li>
             ))}
         </ul>
     </div>
@@ -36,15 +37,18 @@ const EventTags = ({ tags }: { tags: string[] }) => (
 
 
 const EventDetailsPage = async ({ params }: { params: Promise<{ slug: string }> }) => {
+    'use cache';
+    cacheLife('minutes');
     const { slug } = await params;
     const response = await fetch(`${BASE_URL}/api/events/${slug}`);
-    const { event: { description, image, overview, date, time, location, mode, agenda, audience, organizer, tags } } = await response.json();
+    const { event: { _id, description, image, overview, date, time, location, mode, agenda, audience, organizer, tags } } = await response.json();
 
     if (!description) return notFound();
 
     const booking = 10;
 
     const similarEvents: IEvent[] = await getSimilarEventsBySlug(slug);
+    console.log('similar events :', similarEvents.length);
     return (
         <section id="event">
             <div className="header">
@@ -80,7 +84,7 @@ const EventDetailsPage = async ({ params }: { params: Promise<{ slug: string }> 
                     <div className="signup-card">
                         <h2>Book Your Spot</h2>
                         {booking > 0 ? <p className="text-sm"> Join {booking} peoples who have already booked their spot!</p> : <p className="text-sm">Book your spot now!</p>}
-                        <BookEvent />
+                        <BookEvent eventId={_id} slug={slug} />
                     </div>
 
                 </aside>
