@@ -2,8 +2,11 @@ import ExploreBtn from "@/components/ExploreBtn";
 import EventCard from "@/components/EventCard";
 import { IEvent } from "@/database";
 import { getAllEvents } from "@/lib/actions/event.actions";
+import { cacheLife } from "next/cache";
 
 export default async function Page() {
+    'use cache';
+    cacheLife('minutes');
     const events: IEvent[] = await getAllEvents();
     return (
         <section>
